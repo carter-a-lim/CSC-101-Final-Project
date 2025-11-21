@@ -54,8 +54,8 @@ for _, row in df.iterrows():
     )
 
 # 8) Print sample summaries
-for s in suppliers[:]: #controls how many are shown from the dataset
-    print(s.summary())
+# for s in suppliers[:]: #controls how many are shown from the dataset
+#     print(s.summary())
 
 #region only
 # for s in suppliers:
@@ -64,6 +64,6 @@ for s in suppliers[:]: #controls how many are shown from the dataset
 
 #efficiency only
 # for s in suppliers:
-#     if s.region == "Southern California":
+#     if s.classify_efficiency() == "Efficient":
 #         print(s.summary())
 
