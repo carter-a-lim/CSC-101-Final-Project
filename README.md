@@ -1,7 +1,6 @@
 # CSC-101-Final-Project
 Data input: https://data.ca.gov/dataset/urban-water-use-objectives-compiled-report-data/resource/9a773df4-af2f-450d-b0e5-f49f4a1e1523
 
-
 # Data Cleaning NOAH:
 turn csv into classes ->
 ### Expected way of doing it + output
@@ -22,9 +21,6 @@ classify_efficiency() – returns category label: "Efficient", "Moderate", or "I
 usage_per_person() – calculates per-person daily water use \
 summary() – returns formatted summary string for output
 
-
-
-
 # Data structure: CARTER:
 Store WaterSupplier elements in a list, each will be created by loading data from a csv file.
 
@@ -40,3 +36,22 @@ Which regions use the most potable vs recycled water\
 Efficiency percentage by region or company\
 Residential gallons per capita per day (R-GPCD)\
 Identification of “overuse” areas
+
+### key metrics:
+Potable vs. Total Residential Water Use
+- Determines potable demand and inferred recycled/nonpotable share.
+- Aggregated by region to identify where potable reliance is highest.
+
+Efficiency Percentage (Recycled/Nonpotable Share)
+- Efficiency % = (Nonpotable ÷ Total) × 100
+- Categorized per supplier and averaged by region.
+
+Residential Gallons per Capita per Day (R-GPCD)
+- Indicates average daily residential water use per person.
+- Used for comparisons across suppliers and regions.
+
+Overuse Identification
+- Flags suppliers with:
+- R-GPCD above regional median
+- Efficiency below 5%
+- Provides a list of “overuse areas.”
