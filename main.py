@@ -186,7 +186,7 @@ with open("water_use_summary.txt", "w") as f:
 
         if eff == 0:
             chosen = tips["missing"]
-        elif eff < 0.006:  # 0.6%
+        elif eff < 0.006:
             chosen = tips["high_usage"]
         else:
             chosen = tips["efficient"]
