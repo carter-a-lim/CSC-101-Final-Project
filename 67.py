@@ -91,7 +91,10 @@ for _, row in df.iterrows():
     )
 
 # summary by carter
+import math  # put this at the top of your file
+
 with open("water_use_summary.txt", "w") as f:
+
     tips = {
         "high_usage": "Try reducing outdoor watering and check for leaks.",
         "efficient": "Great job! Keep maintaining low water usage.",
@@ -100,63 +103,106 @@ with open("water_use_summary.txt", "w") as f:
 
     f.write("CALIFORNIA WATER USE SUMMARY\n\n")
 
-    # Potable vs Nonpotable by region
+    regions = ["Central California", "Southern California", "Northern California"]
+
+    # ----------------------------------------
+    # 1. POTABLE VS NONPOTABLE BY REGION
+    # ----------------------------------------
     f.write("1. POTABLE VS NONPOTABLE (RECYCLED) WATER BY REGION\n")
-    region_potable = df.groupby("region")["AWU_POTABLE_TOTAL_RES_GAL"].sum()
-    region_total = df.groupby("region")["residential_potable_use"].sum()
-    region_nonpotable = region_total - region_potable
 
-    for region in region_total.index:
+    for region in regions:
+        potable_total = sum(s.potable_water_use for s in suppliers if s.region == region)
+        recycled_total = sum(s.recycled_water_use for s in suppliers if s.region == region)
+
         f.write(f"{region}:\n")
-        f.write(f"   Potable Use: {region_potable[region]:,.0f} gallons\n")
-        f.write(f"   Nonpotable Use: {region_nonpotable[region]:,.0f} gallons\n\n")
+        f.write(f"   Potable Use: {potable_total:,.0f} gallons\n")
+        f.write(f"   Nonpotable/Recycled Use: {recycled_total:,.0f} gallons\n\n")
 
-    # Efficiency by region
+    # ----------------------------------------
+    # 2. WATER EFFICIENCY BY REGION
+    # ----------------------------------------
     f.write("2. WATER EFFICIENCY BY REGION\n")
-    region_eff = df.groupby("region")["efficiency_percent"].mean()
 
-    for region, eff in region_eff.items():
-        f.write(f"{region}: {eff:.5f}% efficiency\n")
+    region_eff = {}
+
+    for region in regions:
+        efficiencies = [s.calculate_efficiency() for s in suppliers if s.region == region]
+        avg_eff = (sum(efficiencies) / len(efficiencies)) if efficiencies else 0
+        region_eff[region] = avg_eff
+        f.write(f"{region}: {avg_eff * 100:.5f}% efficiency\n")
+
     f.write("\n")
 
-    # R-GPCD by region
+    # ----------------------------------------
+    # 3. R-GPCD BY REGION
+    # ----------------------------------------
     f.write("3. RESIDENTIAL GALLONS PER CAPITA PER DAY (R-GPCD)\n")
-    region_gpcd = df.groupby("region")["residential_use_per_capita"].mean()
 
-    for region, gpcd in region_gpcd.items():
-        f.write(f"{region}: {gpcd:.2f} gallons/person/day\n")
+    region_gpcd = {}
+
+    for region in regions:
+        values = [
+            s.residential_use_per_capita
+            for s in suppliers
+            if s.region == region
+               and s.residential_use_per_capita is not None
+               and not (isinstance(s.residential_use_per_capita, float)
+                        and math.isnan(s.residential_use_per_capita))
+        ]
+
+        avg_gpcd = (sum(values) / len(values)) if values else 0
+        region_gpcd[region] = avg_gpcd
+        f.write(f"{region}: {avg_gpcd:.2f} gallons/person/day\n")
+
     f.write("\n")
 
-    # Overuse identification
+    # ----------------------------------------
+    # 4. IDENTIFIED OVERUSE AREAS
+    # ----------------------------------------
     f.write("4. IDENTIFIED OVERUSE AREAS\n")
-    overuse = df[
-        (df["overuse_flag"]) &
-        (df["efficiency_label"] != "Missing Data")
-    ][["supplier_name", "region", "residential_use_per_capita", "efficiency_percent"]]
 
-    if len(overuse) == 0:
+    overuse_found = False
+
+    for s in suppliers:
+        rgpcd = s.residential_use_per_capita
+
+        # Skip missing RGPCD
+        if rgpcd is None or (isinstance(rgpcd, float) and math.isnan(rgpcd)):
+            continue
+
+        eff_pct = s.calculate_efficiency() * 100
+
+        # ❌ Skip suppliers with 0% efficiency entirely
+        if eff_pct == 0:
+            continue
+
+        high_r_gpcd = rgpcd > region_gpcd[s.region]
+        low_eff = eff_pct < 5  # matches your original criteria
+
+        if high_r_gpcd and low_eff:
+            overuse_found = True
+            f.write(f"{s.supplier_name} ({s.region}):\n")
+            f.write(f"   R-GPCD: {rgpcd:.2f}\n")
+            f.write(f"   Efficiency: {eff_pct:.2f}%\n\n")
+
+    if not overuse_found:
         f.write("No overuse areas identified.\n\n")
-    else:
-        for _, row in overuse.iterrows():
-            f.write(f"{row['supplier_name']} ({row['region']}):\n")
-            f.write(f"   R-GPCD: {row['residential_use_per_capita']:.2f}\n")
-            f.write(f"   Efficiency: {row['efficiency_percent']:.2f}%\n\n")
 
-    # === SUSTAINABILITY TIP *PER REGION* ===
+    # ----------------------------------------
+    # 5. SUSTAINABILITY TIP BY REGION
+    # ----------------------------------------
     f.write("=== SUSTAINABILITY TIP BY REGION ===\n")
 
-    # Determine tip for each region using your existing tips dict
     for region, eff in region_eff.items():
 
         if eff == 0:
-            chosen_tip = tips["missing"]
-        elif eff < 0.6:
-            chosen_tip = tips["high_usage"]
+            chosen = tips["missing"]
+        elif eff < 0.006:  # 0.6% as in your earlier threshold
+            chosen = tips["high_usage"]
         else:
-            chosen_tip = tips["efficient"]
+            chosen = tips["efficient"]
 
         f.write(f"{region}:\n")
-        f.write(f"   {chosen_tip}\n\n")
-
+        f.write(f"   {chosen}\n\n")
 
 print("Summary written to water_use_summary.txt")

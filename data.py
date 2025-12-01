@@ -19,10 +19,11 @@ class WaterSupplier:
         # Assuming total is for 1 day; if it's monthly, divide by 30; if yearly, divide by 365.
         return (self.calculate_total_use() / self.population_served) if self.population_served else 0
 
-    # Treat "efficiency" as meeting the < 50 gpcd target
     def calculate_efficiency(self):
-        # return a simple boolean-like score if you still want a numeric value
-        return 1.0 if self.usage_per_person() < 50 else 0.0
+        total = self.potable_water_use + self.recycled_water_use
+        if total == 0:
+            return 0
+        return self.recycled_water_use / total
 
     def classify_efficiency(self):
         return "Efficient" if self.usage_per_person() < 50 else "Inefficient"

@@ -3,25 +3,25 @@ CALIFORNIA WATER USE SUMMARY
 1. POTABLE VS NONPOTABLE (RECYCLED) WATER BY REGION
 Central California:
    Potable Use: 857,049,614,278 gallons
-   Nonpotable Use: 3,680,160,812 gallons
-
-Northern California:
-   Potable Use: 74,913,816,376 gallons
-   Nonpotable Use: 5,334,643 gallons
+   Nonpotable/Recycled Use: 5,485,475,561 gallons
 
 Southern California:
    Potable Use: 165,168,458,899 gallons
-   Nonpotable Use: 16,383,491 gallons
+   Nonpotable/Recycled Use: 16,383,491 gallons
+
+Northern California:
+   Potable Use: 74,913,816,376 gallons
+   Nonpotable/Recycled Use: 5,334,643 gallons
 
 2. WATER EFFICIENCY BY REGION
 Central California: 0.66288% efficiency
-Northern California: 0.00149% efficiency
 Southern California: 0.02731% efficiency
+Northern California: 0.00149% efficiency
 
 3. RESIDENTIAL GALLONS PER CAPITA PER DAY (R-GPCD)
 Central California: 87.96 gallons/person/day
-Northern California: 74.65 gallons/person/day
 Southern California: 98.02 gallons/person/day
+Northern California: 74.65 gallons/person/day
 
 4. IDENTIFIED OVERUSE AREAS
 Beaumont - Cherry Valley Water District (Central California):
@@ -39,10 +39,6 @@ Manteca  City Of (Central California):
 Montecito Water District (Central California):
    R-GPCD: 196.79
    Efficiency: 0.25%
-
-Ontario  City Of (Central California):
-   R-GPCD: 84.31
-   Efficiency: 4.78%
 
 Pleasanton  City Of (Central California):
    R-GPCD: 91.02
@@ -80,9 +76,9 @@ Yucaipa Valley Water District (Central California):
 Central California:
    Great job! Keep maintaining low water usage.
 
-Northern California:
+Southern California:
    Try reducing outdoor watering and check for leaks.
 
-Southern California:
+Northern California:
    Try reducing outdoor watering and check for leaks.
 
