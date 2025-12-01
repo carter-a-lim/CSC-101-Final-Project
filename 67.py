@@ -1,6 +1,7 @@
 import pandas as pd
 from data import WaterSupplier
 
+# CSV to list of objects is by Noah
 # 1) Load CSV
 df = pd.read_csv("actualwateruse (1).csv")
 
@@ -89,96 +90,73 @@ for _, row in df.iterrows():
         )
     )
 
-output_path = "water_use_summary.txt"
-with open(output_path, "w") as f:
+# summary by carter
+with open("water_use_summary.txt", "w") as f:
+    tips = {
+        "high_usage": "Try reducing outdoor watering and check for leaks.",
+        "efficient": "Great job! Keep maintaining low water usage.",
+        "missing": "No recycled water recorded. Consider conservation programs or better tracking."
+    }
 
-    # Intro / Methodology
-    f.write("============================================================\n")
-    f.write(" CALIFORNIA WATER USE ANALYSIS - METHOD EXPLANATION\n")
-    f.write("============================================================\n")
-    f.write("This report analyzes residential water usage across suppliers.\n")
-    f.write("All calculations are based on the following formulas:\n\n")
-    f.write("• Efficiency (%) = ((Total Residential Use - Potable Use) / Total Residential Use) * 100\n")
-    f.write("   -> Represents the share of recycled/nonpotable water.\n\n")
-    f.write("• Population Served = (Total Residential Use / (R-GPCD * 365))\n")
-    f.write("   -> Estimates number of residents served using daily per-capita consumption.\n\n")
-    f.write("• Overuse Flag = Supplier with R-GPCD above regional median AND efficiency < 5%\n")
-    f.write("   -> Identifies potential overconsumption areas.\n\n")
-    f.write("• Regional Classification: based on supplier name keywords (Southern, Central, Northern California)\n\n")
-    f.write("============================================================\n\n")
+    f.write("CALIFORNIA WATER USE SUMMARY\n\n")
 
-    # Supplier summaries
-    f.write("=== SUPPLIER SUMMARIES ===\n")
-    for s in suppliers[:]:
-        f.write(s.summary() + "\n")
+    # Potable vs Nonpotable by region
+    f.write("1. POTABLE VS NONPOTABLE (RECYCLED) WATER BY REGION\n")
+    region_potable = df.groupby("region")["AWU_POTABLE_TOTAL_RES_GAL"].sum()
+    region_total = df.groupby("region")["residential_potable_use"].sum()
+    region_nonpotable = region_total - region_potable
 
-    # Overuse report (excluding missing data)
+    for region in region_total.index:
+        f.write(f"{region}:\n")
+        f.write(f"   Potable Use: {region_potable[region]:,.0f} gallons\n")
+        f.write(f"   Nonpotable Use: {region_nonpotable[region]:,.0f} gallons\n\n")
+
+    # Efficiency by region
+    f.write("2. WATER EFFICIENCY BY REGION\n")
+    region_eff = df.groupby("region")["efficiency_percent"].mean()
+
+    for region, eff in region_eff.items():
+        f.write(f"{region}: {eff:.5f}% efficiency\n")
+    f.write("\n")
+
+    # R-GPCD by region
+    f.write("3. RESIDENTIAL GALLONS PER CAPITA PER DAY (R-GPCD)\n")
+    region_gpcd = df.groupby("region")["residential_use_per_capita"].mean()
+
+    for region, gpcd in region_gpcd.items():
+        f.write(f"{region}: {gpcd:.2f} gallons/person/day\n")
+    f.write("\n")
+
+    # Overuse identification
+    f.write("4. IDENTIFIED OVERUSE AREAS\n")
     overuse = df[
         (df["overuse_flag"]) &
         (df["efficiency_label"] != "Missing Data")
-    ][
-        ["supplier_name", "region", "residential_use_per_capita", "efficiency_percent", "efficiency_label"]
-    ].sort_values("residential_use_per_capita", ascending=False)
+    ][["supplier_name", "region", "residential_use_per_capita", "efficiency_percent"]]
 
-    f.write("\n=== OVERUSE AREAS (EXCLUDING MISSING DATA) ===\n")
-    f.write("Suppliers flagged here have R-GPCD above their region's median and efficiency < 5%.\n")
-    f.write(f"Number of flagged suppliers: {len(overuse)}\n\n")
-    f.write(overuse.to_string(index=False) + "\n")
+    if len(overuse) == 0:
+        f.write("No overuse areas identified.\n\n")
+    else:
+        for _, row in overuse.iterrows():
+            f.write(f"{row['supplier_name']} ({row['region']}):\n")
+            f.write(f"   R-GPCD: {row['residential_use_per_capita']:.2f}\n")
+            f.write(f"   Efficiency: {row['efficiency_percent']:.2f}%\n\n")
 
-    # Data quality summary
-    f.write("\n=== DATA QUALITY SUMMARY ===\n")
-    f.write("This shows how many rows had usable data for analysis.\n")
-    f.write(df['data_quality'].value_counts().to_string() + "\n")
+    # === SUSTAINABILITY TIP *PER REGION* ===
+    f.write("=== SUSTAINABILITY TIP BY REGION ===\n")
 
-    f.write("\n=== EFFICIENCY DATA SUMMARY ===\n")
-    f.write("Suppliers marked 'Missing Data' have no recycled/nonpotable use recorded.\n")
-    f.write(df["efficiency_label"].value_counts().to_string() + "\n")
+    # Determine tip for each region using your existing tips dict
+    for region, eff in region_eff.items():
 
-    # Residential Use Intensity by Region
-    r_gpcd_summary = df.groupby("region")["residential_use_per_capita"].agg(["mean", "median", "max", "min"])
-    f.write("\n=== RESIDENTIAL WATER USE INTENSITY BY REGION ===\n")
-    f.write("This shows average (mean), median, and range of daily per-person use in gallons.\n")
-    f.write(r_gpcd_summary.sort_values("mean", ascending=False).to_string() + "\n")
+        if eff == 0:
+            chosen_tip = tips["missing"]
+        elif eff < 0.6:
+            chosen_tip = tips["high_usage"]
+        else:
+            chosen_tip = tips["efficient"]
 
-    # Top 10 Population Served
-    top_pop = df.sort_values("population_served", ascending=False)[["supplier_name", "region", "population_served"]].head(10)
-    f.write("\n=== TOP 10 SUPPLIERS BY ESTIMATED POPULATION SERVED ===\n")
-    f.write("Shows the largest service areas based on total water and per-capita use.\n")
-    f.write(top_pop.to_string(index=False) + "\n")
+        f.write(f"{region}:\n")
+        f.write(f"   {chosen_tip}\n\n")
 
-    # Total Residential Demand by Region
-    region_demand = df.groupby("region")[["AWU_POTABLE_TOTAL_RES_GAL", "residential_potable_use"]].sum()
-    region_demand["total_gal_perc"] = (region_demand["residential_potable_use"] / region_demand["residential_potable_use"].sum()) * 100
-    f.write("\n=== REGIONAL SHARE OF TOTAL RESIDENTIAL WATER USE ===\n")
-    f.write("Percentage share of total reported residential water use by region.\n")
-    f.write(region_demand.sort_values("residential_potable_use", ascending=False).to_string() + "\n")
 
-    # High-Use Households
-    if "AWU_SF_RES_90PCTILE_GAL" in df.columns:
-        top_90 = df[["supplier_name", "region", "AWU_SF_RES_90PCTILE_GAL"]].sort_values(
-            "AWU_SF_RES_90PCTILE_GAL", ascending=False
-        ).head(10)
-        f.write("\n=== TOP 10 SUPPLIERS BY 90TH PERCENTILE SINGLE-FAMILY USE ===\n")
-        f.write("Highlights where top-consuming households use the most water.\n")
-        f.write(top_90.to_string(index=False) + "\n")
-
-    # Cost-of-Service and Financial Insights
-    if "AWU_COST_OF_SERVICE_HIGHEST_USERS" in df.columns:
-        has_cost_study = df[df["AWU_COST_OF_SERVICE_HIGHEST_USERS"].notna()]
-        f.write(f"\n{len(has_cost_study)} SUPPLIERS HAVE COST-OF-SERVICE STUDIES ON RECORD.\n")
-        f.write("These studies analyze rate fairness and can incentivize conservation.\n")
-
-    # Regional Summary Overview
-    region_summary = df.groupby("region").agg({
-        "residential_use_per_capita": "median",
-        "population_served": "sum",
-        "AWU_POTABLE_TOTAL_RES_GAL": "sum",
-        "residential_potable_use": "sum",
-        "efficiency_percent": "mean"
-    })
-    region_summary = region_summary.rename(columns={"efficiency_percent": "avg_efficiency"})
-    f.write("\n=== REGIONAL SUMMARY OVERVIEW ===\n")
-    f.write("Shows the median R-GPCD, total population served, and average efficiency per region.\n")
-    f.write(region_summary.to_string() + "\n")
-
-print(f"All results have been saved to {output_path}")
+print("Summary written to water_use_summary.txt")

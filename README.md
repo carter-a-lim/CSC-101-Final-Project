@@ -36,22 +36,3 @@ Which regions use the most potable vs recycled water\
 Efficiency percentage by region or company\
 Residential gallons per capita per day (R-GPCD)\
 Identification of “overuse” areas
-
-### key metrics:
-Potable vs. Total Residential Water Use
-- Determines potable demand and inferred recycled/nonpotable share.
-- Aggregated by region to identify where potable reliance is highest.
-
-Efficiency Percentage (Recycled/Nonpotable Share)
-- Efficiency % = (Nonpotable ÷ Total) × 100
-- Categorized per supplier and averaged by region.
-
-Residential Gallons per Capita per Day (R-GPCD)
-- Indicates average daily residential water use per person.
-- Used for comparisons across suppliers and regions.
-
-Overuse Identification
-- Flags suppliers with:
-- R-GPCD above regional median
-- Efficiency below 5%
-- Provides a list of “overuse areas.”
