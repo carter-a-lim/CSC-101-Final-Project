@@ -1,5 +1,6 @@
 import pandas as pd
 from data import WaterSupplier
+import math
 
 # CSV to list of objects is by Noah
 # 1) Load CSV
@@ -91,7 +92,6 @@ for _, row in df.iterrows():
     )
 
 # summary by carter
-import math  # put this at the top of your file
 
 with open("water_use_summary.txt", "w") as f:
 
@@ -105,9 +105,7 @@ with open("water_use_summary.txt", "w") as f:
 
     regions = ["Central California", "Southern California", "Northern California"]
 
-    # ----------------------------------------
     # 1. POTABLE VS NONPOTABLE BY REGION
-    # ----------------------------------------
     f.write("1. POTABLE VS NONPOTABLE (RECYCLED) WATER BY REGION\n")
 
     for region in regions:
@@ -118,9 +116,7 @@ with open("water_use_summary.txt", "w") as f:
         f.write(f"   Potable Use: {potable_total:,.0f} gallons\n")
         f.write(f"   Nonpotable/Recycled Use: {recycled_total:,.0f} gallons\n\n")
 
-    # ----------------------------------------
     # 2. WATER EFFICIENCY BY REGION
-    # ----------------------------------------
     f.write("2. WATER EFFICIENCY BY REGION\n")
 
     region_eff = {}
@@ -133,9 +129,7 @@ with open("water_use_summary.txt", "w") as f:
 
     f.write("\n")
 
-    # ----------------------------------------
     # 3. R-GPCD BY REGION
-    # ----------------------------------------
     f.write("3. RESIDENTIAL GALLONS PER CAPITA PER DAY (R-GPCD)\n")
 
     region_gpcd = {}
@@ -156,9 +150,7 @@ with open("water_use_summary.txt", "w") as f:
 
     f.write("\n")
 
-    # ----------------------------------------
     # 4. IDENTIFIED OVERUSE AREAS
-    # ----------------------------------------
     f.write("4. IDENTIFIED OVERUSE AREAS\n")
 
     overuse_found = False
@@ -172,12 +164,11 @@ with open("water_use_summary.txt", "w") as f:
 
         eff_pct = s.calculate_efficiency() * 100
 
-        # ❌ Skip suppliers with 0% efficiency entirely
         if eff_pct == 0:
             continue
 
         high_r_gpcd = rgpcd > region_gpcd[s.region]
-        low_eff = eff_pct < 5  # matches your original criteria
+        low_eff = eff_pct < 5
 
         if high_r_gpcd and low_eff:
             overuse_found = True
@@ -188,16 +179,14 @@ with open("water_use_summary.txt", "w") as f:
     if not overuse_found:
         f.write("No overuse areas identified.\n\n")
 
-    # ----------------------------------------
     # 5. SUSTAINABILITY TIP BY REGION
-    # ----------------------------------------
     f.write("=== SUSTAINABILITY TIP BY REGION ===\n")
 
     for region, eff in region_eff.items():
 
         if eff == 0:
             chosen = tips["missing"]
-        elif eff < 0.006:  # 0.6% as in your earlier threshold
+        elif eff < 0.006:  # 0.6%
             chosen = tips["high_usage"]
         else:
             chosen = tips["efficient"]
